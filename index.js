@@ -7,7 +7,6 @@ const io = require('socket.io').listen(server)
 const weather = new Map()
 
 io.on('connection', (socket) => {
-
     socket.on('takeWeather', data => {
         try {
             let urlCurrent
@@ -17,18 +16,19 @@ io.on('connection', (socket) => {
                 urlCurrent = `https://api.openweathermap.org/data/2.5/weather?lat=${data.lat}&lon=${data.lon}&appid=${config.WeatherKeyAPI}`
             }
             request(urlCurrent, (error, response) => {
-                weather.set(socket.id, new Map())
-                weather.get(socket.id).set('currentWeather', JSON.parse(response.body))
-                const lat = JSON.parse(response.body).coord.lat
-                const lon = JSON.parse(response.body).coord.lon
-                const URL = `https://api.openweathermap.org/data/2.5/onecall?lat=${lat}&lon=${lon}&exclude=current,minutely&appid=${config.WeatherKeyAPI}`
-                request(URL, (error, response) => {
-                    weather.get(socket.id).set('forecastHourly', JSON.parse(response.body).hourly)
-                    weather.get(socket.id).set('forecastDaily', JSON.parse(response.body).daily)
-                    socket.emit('status', true)
-                })
+                    if (response.body.cod === '404') new Error(response.body.message)
+                    weather.set(socket.id, new Map())
+                    weather.get(socket.id).set('currentWeather', JSON.parse(response.body))
+                    const lat = JSON.parse(response.body).coord.lat
+                    const lon = JSON.parse(response.body).coord.lon
+                    const URL = `https://api.openweathermap.org/data/2.5/onecall?lat=${lat}&lon=${lon}&exclude=current,minutely&appid=${config.WeatherKeyAPI}`
+                    request(URL, (error, response) => {
+                        weather.get(socket.id).set('forecastHourly', JSON.parse(response.body).hourly)
+                        weather.get(socket.id).set('forecastDaily', JSON.parse(response.body).daily)
+                        socket.emit('status', true)
+                    })
             })
-        } catch (err) { }
+        } catch (err) { console.log(err); }
     })
 
     socket.on('weatherCurrent', () => {
