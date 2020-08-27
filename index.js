@@ -25,6 +25,7 @@ io.on('connection', (socket) => {
                     request(URL, (error, response) => {
                         weather.get(socket.id).set('forecastHourly', JSON.parse(response.body).hourly)
                         weather.get(socket.id).set('forecastDaily', JSON.parse(response.body).daily)
+                        console.log(weather);
                         socket.emit('status', true)
                     })
             })
