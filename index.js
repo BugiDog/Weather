@@ -8,27 +8,31 @@ const weather = new Map()
 
 io.on('connection', (socket) => {
     socket.on('takeWeather', data => {
-        try {
-            let urlCurrent
-            if (typeof (data) === 'string') {
-                urlCurrent = `https://api.openweathermap.org/data/2.5/weather?q=${data}&appid=${config.WeatherKeyAPI}`
-            } else if (data.lat && data.lon) {
-                urlCurrent = `https://api.openweathermap.org/data/2.5/weather?lat=${data.lat}&lon=${data.lon}&appid=${config.WeatherKeyAPI}`
+
+        let urlCurrent
+        if (typeof (data) === 'string') {
+            urlCurrent = `https://api.openweathermap.org/data/2.5/weather?q=${data}&appid=${config.WeatherKeyAPI}`
+        } else if (data.latitude && data.longitude) {
+            urlCurrent = `https://api.openweathermap.org/data/2.5/weather?lat=${data.latitude}&lon=${data.longitude}&appid=${config.WeatherKeyAPI}`
+        }
+        request(urlCurrent, (error, response) => {
+            if (JSON.parse(response.body).cod >='400') {
+                console.log('----------------');
+               console.log('ERROR:',JSON.parse(response.body)); 
+                socket.emit('Error',JSON.parse(response.body)) 
+            } else {
+                weather.set(socket.id, new Map())
+                weather.get(socket.id).set('currentWeather', JSON.parse(response.body))
+                const latitude = JSON.parse(response.body).coord.lat
+                const longitude = JSON.parse(response.body).coord.lon
+                const URL = `https://api.openweathermap.org/data/2.5/onecall?lat=${latitude}&lon=${longitude}&exclude=current,minutely&appid=${config.WeatherKeyAPI}`
+                request(URL, (error, response) => {
+                    weather.get(socket.id).set('forecastHourly', JSON.parse(response.body).hourly)
+                    weather.get(socket.id).set('forecastDaily', JSON.parse(response.body).daily)
+                    socket.emit('status', true)
+                })
             }
-            request(urlCurrent, (error, response) => {
-                    if (response.body.cod === '404') new Error(response.body.message)
-                    weather.set(socket.id, new Map())
-                    weather.get(socket.id).set('currentWeather', JSON.parse(response.body))
-                    const lat = JSON.parse(response.body).coord.lat
-                    const lon = JSON.parse(response.body).coord.lon
-                    const URL = `https://api.openweathermap.org/data/2.5/onecall?lat=${lat}&lon=${lon}&exclude=current,minutely&appid=${config.WeatherKeyAPI}`
-                    request(URL, (error, response) => {
-                        weather.get(socket.id).set('forecastHourly', JSON.parse(response.body).hourly)
-                        weather.get(socket.id).set('forecastDaily', JSON.parse(response.body).daily)
-                        socket.emit('status', true)
-                    })
-            })
-        } catch (err) { console.log(err); }
+        })
     })
 
     socket.on('weatherCurrent', () => {
