@@ -27,11 +27,11 @@ router.get('/Current', async (req, res) => {
 
 router.get('/OneHour', async (req, res) => {
     try {
-        const lat = req.query.lat//req.query.lat   33.441792
-        const lon = req.query.lon// req.query.lon   -94.037689
+        const latitude = req.query.latitude//req.query.latitude   33.441792
+        const longitude = req.query.longitude// req.query.longitude   -94.037689
         const part = ''//current   minutely hourly   daily
 
-        const URL=`https://api.openweathermap.org/data/2.5/onecall?lat=${lat}&lon=${lon}&exclude=${part}&appid=${config.WeatherKeyAPI}`
+        const URL=`https://api.openweathermap.org/data/2.5/onecall?latitude=${latitude}&longitude=${longitude}&exclude=${part}&appid=${config.WeatherKeyAPI}`
 
         request(URL, (error, response) => {
             res.setHeader('Access-Control-Allow-Origin', 'http://localhost:3000');
