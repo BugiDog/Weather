@@ -2,8 +2,8 @@ const TransformTime = require('./TransformTime')
 
 const TransformForecastHourlyItem = (item) =>{
     const time = TransformTime(item.dt, 'time')
-    const temperature = (item.temp - 273).toFixed(1)
-    const temperatureFeelsLike = (item.feels_like - 273).toFixed(1)
+    const temperature = item.temp .toFixed(1)
+    const temperatureFeelsLike = item.feels_like .toFixed(1)
     let weatherId
     ((item.weather[0].id === 800 || item.weather[0].id === 801 || item.weather[0].id === 500) &&
         (item.weather[0].icon.split('')[2] === 'n')) ? weatherId = item.weather[0].id + 10 : weatherId = item.weather[0].id
