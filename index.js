@@ -14,14 +14,14 @@ io.on('connection', (socket) => {
 
         let urlCurrent
         if (typeof (data) === 'string') {
-            urlCurrent = `https://api.openweathermap.org/data/2.5/weather?q=${data}&appid=${config.WeatherKeyAPI}`
+            urlCurrent = `https://api.openweathermap.org/data/2.5/weather?q=${data}&lang=ru&units=metric&appid=${config.WeatherKeyAPI}`
         } else if (data.latitude && data.longitude) {
-            urlCurrent = `https://api.openweathermap.org/data/2.5/weather?lat=${data.latitude}&lon=${data.longitude}&appid=${config.WeatherKeyAPI}`
+            urlCurrent = `https://api.openweathermap.org/data/2.5/weather?lat=${data.latitude}&lon=${data.longitude}&lang=ru&units=metric&appid=${config.WeatherKeyAPI}`
         } 
         request(urlCurrent, (error, response) => {
-            console.log('ERROR:', error);
+            
             if (!!error) {
-                
+                console.log('ERROR:', error);
 
             } else if (JSON.parse(response.body).cod >= '400') {
                 console.log('----------------');
@@ -31,9 +31,12 @@ io.on('connection', (socket) => {
                 weather.set(socket.id, new Map())
                 weather.get(socket.id).set('currentWeather', TransformСurrentWeather(JSON.parse(response.body)))
                 const latitude = JSON.parse(response.body).coord.lat
+                console.log('weatherCurrent:',JSON.parse(response.body));
+                socket.emit('weatherCurrent2', JSON.parse(response.body))//убрать!!!
                 const longitude = JSON.parse(response.body).coord.lon
-                const urlForecast = `https://api.openweathermap.org/data/2.5/onecall?lat=${latitude}&lon=${longitude}&exclude=current,minutely&appid=${config.WeatherKeyAPI}`
+                const urlForecast = `https://api.openweathermap.org/data/2.5/onecall?lat=${latitude}&lon=${longitude}&exclude=current&lang=ru&units=metric&appid=${config.WeatherKeyAPI}`
                 request(urlForecast, (error, response) => {
+                    console.log('onecall:',JSON.parse(response.body));
                     weather.get(socket.id).set('forecastHourly',TransformForecastHourly(JSON.parse(response.body).hourly) )
                     weather.get(socket.id).set('forecastDaily', JSON.parse(response.body).daily)
                     socket.emit('status', true)
